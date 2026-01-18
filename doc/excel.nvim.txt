@@ -1,0 +1,229 @@
+*excel.nvim.txt*  Excel file support for Neovim
+
+==============================================================================
+CONTENTS                                                   *excel.nvim-contents*
+
+    1. Introduction .......................... |excel.nvim-introduction|
+    2. Requirements .......................... |excel.nvim-requirements|
+    3. Installation .......................... |excel.nvim-installation|
+    4. Commands .............................. |excel.nvim-commands|
+    5. Configuration ......................... |excel.nvim-configuration|
+    6. Functions ............................. |excel.nvim-functions|
+    7. Examples .............................. |excel.nvim-examples|
+    8. License ............................... |excel.nvim-license|
+
+==============================================================================
+1. INTRODUCTION                                       *excel.nvim-introduction*
+
+excel.nvim is a Neovim plugin that allows you to view and edit Excel (.xlsx)
+files directly within Neovim. It converts Excel sheets to CSV for editing and
+saves changes back to the Excel format.
+
+Features:
+  • Open and view Excel files as CSV
+  • Edit Excel data using Neovim
+  • Save changes back to Excel format
+  • Multiple sheet support
+  • Floating window preview
+  • Create new Excel workbooks
+
+==============================================================================
+2. REQUIREMENTS                                       *excel.nvim-requirements*
+
+  • Neovim >= 0.7.0
+  • Python 3 with packages:
+    - pandas
+    - openpyxl
+
+Install Python dependencies: >
+    pip install pandas openpyxl
+<
+
+==============================================================================
+3. INSTALLATION                                       *excel.nvim-installation*
+
+Using lazy.nvim: >lua
+    {
+      'yourusername/excel.nvim',
+      config = function()
+        require('excel').setup()
+      end,
+    }
+<
+
+Using packer.nvim: >lua
+    use {
+      'yourusername/excel.nvim',
+      config = function()
+        require('excel').setup()
+      end,
+    }
+<
+
+==============================================================================
+4. COMMANDS                                               *excel.nvim-commands*
+
+:ExcelOpen [file]                                              *:ExcelOpen*
+    Open an Excel file as CSV in a split window. If no file is provided,
+    uses the current buffer's file.
+
+:ExcelView [file]                                              *:ExcelView*
+    View an Excel file in a floating window. Press 'q' or <Esc> to close.
+
+:ExcelSave                                                     *:ExcelSave*
+    Save changes from the CSV buffer back to the original Excel file.
+
+:ExcelCreate [file]                                          *:ExcelCreate*
+    Create a new Excel workbook with a default sheet.
+
+:ExcelSheets                                                 *:ExcelSheets*
+    List all sheets in the currently open Excel workbook.
+
+:ExcelSwitchSheet {index}                              *:ExcelSwitchSheet*
+    Switch to a different sheet by index (0-indexed).
+    Example: >
+        :ExcelSwitchSheet 1
+<
+
+:ExcelInfo                                                     *:ExcelInfo*
+    Show information about the currently open Excel file.
+
+:ExcelAddFormula {formula}                            *:ExcelAddFormula*
+    Add a formula to the current cell (planned feature).
+
+:ExcelFormat                                                 *:ExcelFormat*
+    Format the current cell or selection (planned feature).
+
+==============================================================================
+5. CONFIGURATION                                     *excel.nvim-configuration*
+
+Configure the plugin using the setup function: >lua
+
+    require('excel').setup({
+      python_cmd = 'python3',
+      temp_dir = vim.fn.stdpath('cache') .. '/excel.nvim',
+      auto_recalc = true,
+      default_sheet = 0,
+      float_opts = {
+        relative = 'editor',
+        width = math.floor(vim.o.columns * 0.9),
+        height = math.floor(vim.o.lines * 0.9),
+        col = math.floor(vim.o.columns * 0.05),
+        row = math.floor(vim.o.lines * 0.05),
+        style = 'minimal',
+        border = 'rounded',
+      },
+    })
+<
+
+Options:
+
+python_cmd                                           *excel.nvim-python_cmd*
+    Type: string
+    Default: 'python3'
+    
+    Python command to use for executing scripts.
+
+temp_dir                                               *excel.nvim-temp_dir*
+    Type: string
+    Default: stdpath('cache')/excel.nvim
+    
+    Directory for temporary CSV files.
+
+auto_recalc                                         *excel.nvim-auto_recalc*
+    Type: boolean
+    Default: true
+    
+    Automatically recalculate formulas when saving.
+
+default_sheet                                     *excel.nvim-default_sheet*
+    Type: number
+    Default: 0
+    
+    Default sheet index to open (0-indexed).
+
+float_opts                                           *excel.nvim-float_opts*
+    Type: table
+    Default: (see configuration example)
+    
+    Options for the floating window used by :ExcelView.
+
+==============================================================================
+6. FUNCTIONS                                             *excel.nvim-functions*
+
+require('excel').setup({config})                      *excel.nvim.setup()*
+    Setup the plugin with custom configuration.
+
+require('excel').open(file)                            *excel.nvim.open()*
+    Open an Excel file as CSV.
+
+require('excel').view(file)                            *excel.nvim.view()*
+    View an Excel file in a floating window.
+
+require('excel').save()                                *excel.nvim.save()*
+    Save changes back to Excel.
+
+require('excel').create(file)                        *excel.nvim.create()*
+    Create a new Excel workbook.
+
+require('excel').list_sheets()                   *excel.nvim.list_sheets()*
+    List all sheets in the current workbook.
+
+require('excel').switch_sheet(index)           *excel.nvim.switch_sheet()*
+    Switch to a different sheet.
+
+require('excel').info()                                *excel.nvim.info()*
+    Show information about the current Excel file.
+
+==============================================================================
+7. EXAMPLES                                               *excel.nvim-examples*
+
+Example 1: Basic workflow ~
+>
+    :ExcelOpen ~/Documents/report.xlsx
+    " Edit the data
+    :ExcelSave
+<
+
+Example 2: Working with multiple sheets ~
+>
+    :ExcelOpen data.xlsx
+    :ExcelSheets
+    :ExcelSwitchSheet 1
+    " Edit sheet 1
+    :ExcelSave
+<
+
+Example 3: Quick preview ~
+>
+    :ExcelView ~/Downloads/spreadsheet.xlsx
+    " Press q to close
+<
+
+Example 4: Creating a new workbook ~
+>
+    :ExcelCreate ~/Documents/new_report.xlsx
+<
+
+Example 5: Key mappings ~
+>lua
+    vim.keymap.set('n', '<leader>xo', '<cmd>ExcelOpen<cr>')
+    vim.keymap.set('n', '<leader>xs', '<cmd>ExcelSave<cr>')
+    vim.keymap.set('n', '<leader>xl', '<cmd>ExcelSheets<cr>')
+<
+
+==============================================================================
+8. LICENSE                                                 *excel.nvim-license*
+
+MIT License
+
+Copyright (c) 2024
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
