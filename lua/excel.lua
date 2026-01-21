@@ -219,20 +219,31 @@ local function get_cursor_cell()
   local line = cursor[1]
   local col = cursor[2]
   
+  -- Line 1: Header row (column letters)
+  -- Line 2: Separator (---)
+  -- Line 3+: Data rows (row 1, 2, 3...)
+  
   if line <= 2 then  -- Header or separator
     return nil, nil
   end
   
-  -- Line 3 in display = Row 1 in data
+  -- Calculate data row: Line 3 = Row 1, Line 4 = Row 2, etc.
   local row = line - 2
   
-  -- Calculate column from horizontal position
-  -- Format: "   |" (4 chars) + " value " (width+2) + "|"
+  -- Column calculation:
+  -- Format: "NNN|" (4 chars for row number) then " VALUE | VALUE |..."
+  -- Each cell is: " " + value (max_col_width chars) + " |" = max_col_width + 3
+  
   if col < 4 then
-    return nil, nil  -- On row number
+    -- Cursor is on the row number area
+    return nil, nil
   end
   
-  local cell_col = math.floor((col - 4) / (M.config.max_col_width + 3)) + 1
+  -- Subtract the row number area (4 chars)
+  local offset = col - 4
+  
+  -- Each column takes up (max_col_width + 3) characters
+  local cell_col = math.floor(offset / (M.config.max_col_width + 3)) + 1
   
   return row, cell_col
 end
@@ -310,7 +321,8 @@ function M.edit_cell()
   local row, col = get_cursor_cell()
   
   if not row or not col then
-    vim.notify('Not on a valid cell', vim.log.levels.WARN)
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    vim.notify(string.format('Not on a valid cell (line=%d, col=%d)', cursor[1], cursor[2]), vim.log.levels.WARN)
     return
   end
   
@@ -324,6 +336,12 @@ function M.edit_cell()
   
   -- Convert to string if it's not already
   current_value = tostring(current_value)
+  
+  -- Debug info
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local debug_msg = string.format('[DEBUG] Line=%d Col=%d -> Row=%d CellCol=%d (%s)', 
+    cursor[1], cursor[2], row, col, cell_ref)
+  vim.notify(debug_msg, vim.log.levels.INFO)
   
   vim.ui.input({
     prompt = string.format('Cell %s [%s]: ', cell_ref, M.state.current_sheet),
