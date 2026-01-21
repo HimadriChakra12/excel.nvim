@@ -27,7 +27,7 @@ M.config = {
 	number_format = "%.2f",
 	cell_padding = 1,
 }
-
+-- Function to move cursor and run A<CR>
 -- Get the Python script path
 local function get_python_script()
 	if M.state.python_script then
@@ -271,14 +271,19 @@ function M.open_excel(filepath)
 	M.state.current_sheet = result.current_sheet or (M.state.sheets[1] or "Sheet1")
 	M.state.modified = false
 
-	-- Create buffer
-	M.state.buffer = vim.api.nvim_create_buf(false, true)
+	-- Force-edit buffer (not readonly, not zip-handled)
+	vim.cmd("enew")
+
+	M.state.buffer = vim.api.nvim_get_current_buf()
 	vim.api.nvim_buf_set_name(M.state.buffer, "Excel: " .. vim.fn.fnamemodify(filepath, ":t"))
 
-	-- Set buffer options
+	-- HARD override zip/readonly behavior
 	vim.api.nvim_buf_set_option(M.state.buffer, "buftype", "acwrite")
-	vim.api.nvim_buf_set_option(M.state.buffer, "filetype", "excel")
+	vim.api.nvim_buf_set_option(M.state.buffer, "modifiable", true)
+	vim.api.nvim_buf_set_option(M.state.buffer, "readonly", false)
 	vim.api.nvim_buf_set_option(M.state.buffer, "swapfile", false)
+	vim.api.nvim_buf_set_option(M.state.buffer, "bufhidden", "wipe")
+	vim.api.nvim_buf_set_option(M.state.buffer, "filetype", "excel")
 
 	-- Switch to buffer
 	vim.api.nvim_set_current_buf(M.state.buffer)
@@ -288,8 +293,6 @@ function M.open_excel(filepath)
 
 	-- Render
 	update_buffer()
-
-	vim.notify("Loaded sheet: " .. M.state.current_sheet .. " (" .. #M.state.sheets .. " sheets)", vim.log.levels.INFO)
 end
 
 -- Save Excel file
