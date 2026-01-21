@@ -2,6 +2,8 @@
 
 A full-featured Excel editor for Neovim that allows you to view, edit, and modify Excel files directly in your editor.
 
+> I Need more help to get at this perfectly. Can Help me if want to support this thing.
+
 ## Features
 
 ✅ **Multiple Format Support**
