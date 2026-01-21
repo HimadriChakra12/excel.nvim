@@ -180,39 +180,6 @@ local function render_excel()
   return lines
 end
 
--- Update buffer with Excel data
-local function update_buffer()
-  if not M.state.buffer or not vim.api.nvim_buf_is_valid(M.state.buffer) then
-    return
-  end
-  
-  local lines = render_excel()
-  
-  vim.api.nvim_buf_set_option(M.state.buffer, 'modifiable', true)
-  vim.api.nvim_buf_set_lines(M.state.buffer, 0, -1, false, lines)
-  vim.api.nvim_buf_set_option(M.state.buffer, 'modifiable', false)
-  vim.api.nvim_buf_set_option(M.state.buffer, 'modified', M.state.modified)
-  
-  -- Set cursor position
-  if M.state.cursor.row and M.state.cursor.col then
-    local line = M.state.cursor.row + 2  -- +2 for header and separator (display line)
-    -- Calculate horizontal position: 4 (row number area) + (col-1) * (width + 3) + 1 (into cell)
-    local col = 4 + (M.state.cursor.col - 1) * (M.config.max_col_width + 3) + 1
-    
-    -- Ensure we're within bounds
-    if line <= #lines then
-      vim.api.nvim_win_set_cursor(0, {line, col})
-    end
-  end
-  
-  -- Update status line with current cell info
-  local row, col = get_cursor_cell()
-  if row and col then
-    local cell_ref = col_to_letter(col) .. row
-    vim.b.excel_cell = cell_ref
-  end
-end
-
 -- Get cell at cursor
 local function get_cursor_cell()
   local cursor = vim.api.nvim_win_get_cursor(0)
@@ -246,6 +213,39 @@ local function get_cursor_cell()
   local cell_col = math.floor(offset / (M.config.max_col_width + 3)) + 1
   
   return row, cell_col
+end
+
+-- Update buffer with Excel data
+local function update_buffer()
+  if not M.state.buffer or not vim.api.nvim_buf_is_valid(M.state.buffer) then
+    return
+  end
+  
+  local lines = render_excel()
+  
+  vim.api.nvim_buf_set_option(M.state.buffer, 'modifiable', true)
+  vim.api.nvim_buf_set_lines(M.state.buffer, 0, -1, false, lines)
+  vim.api.nvim_buf_set_option(M.state.buffer, 'modifiable', false)
+  vim.api.nvim_buf_set_option(M.state.buffer, 'modified', M.state.modified)
+  
+  -- Set cursor position
+  if M.state.cursor.row and M.state.cursor.col then
+    local line = M.state.cursor.row + 2  -- +2 for header and separator (display line)
+    -- Calculate horizontal position: 4 (row number area) + (col-1) * (width + 3) + 1 (into cell)
+    local col = 4 + (M.state.cursor.col - 1) * (M.config.max_col_width + 3) + 1
+    
+    -- Ensure we're within bounds
+    if line <= #lines then
+      vim.api.nvim_win_set_cursor(0, {line, col})
+    end
+  end
+  
+  -- Update status line with current cell info
+  local row, col = get_cursor_cell()
+  if row and col then
+    local cell_ref = col_to_letter(col) .. row
+    vim.b.excel_cell = cell_ref
+  end
 end
 
 -- Open Excel file
