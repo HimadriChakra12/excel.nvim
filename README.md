@@ -1,208 +1,365 @@
 # excel.nvim
 
-A Neovim plugin for viewing and editing Excel files (.xlsx) directly within Neovim.
+A full-featured Excel editor for Neovim that allows you to view, edit, and modify Excel files directly in your editor.
 
 ## Features
 
-- 📊 Open and view Excel files as CSV in Neovim
-- 📝 Edit Excel data using familiar Neovim interface
-- 🔄 Save changes back to Excel format
-- 📑 Multiple sheet support (switch between sheets)
-- 🪟 Floating window preview
-- 🆕 Create new Excel workbooks
-- 📋 List all sheets in a workbook
-- 🔍 View file information
+✅ **Multiple Format Support**
+- `.xlsx` - Excel 2007+ (full support)
+- `.xls` - Excel 97-2003 (read and convert to .xlsx)
+- `.xlsm` - Excel Macro-Enabled
+- `.xlsb` - Excel Binary
+- `.csv` - Comma Separated Values
+
+✅ **Core Functionality**
+- View Excel files in a grid layout
+- Edit cell values with formula support
+- Multiple sheet management
+- Insert/delete rows and columns
+- Navigate between cells easily
+- Save changes back to Excel format
+- Formula recalculation (with LibreOffice)
+
+✅ **Advanced Features**
+- Syntax highlighting for formulas and numbers
+- Cell navigation with intuitive keybindings
+- Sheet switching and management
+- Go-to cell functionality
+- CSV import/export
 
 ## Requirements
 
-- Neovim >= 0.7.0
-- Python 3 with the following packages:
-  - `pandas`
-  - `openpyxl`
+### Required
+- Neovim >= 0.8.0
+- Python 3.7+
+- `openpyxl` Python package
 
-### Install Python dependencies:
-
-```bash
-pip install pandas openpyxl
-```
+### Optional
+- `pandas` (for better CSV handling and data analysis)
+- LibreOffice (for formula recalculation)
 
 ## Installation
 
-### Using [lazy.nvim](https://github.com/folke/lazy.nvim)
+### 1. Install Python Dependencies
+
+```bash
+pip install openpyxl pandas
+```
+
+### 2. Install Plugin
+
+#### Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ```lua
 {
-  'yourusername/excel.nvim',
+  'excel.nvim',
+  dir = '/path/to/excel.nvim',
   config = function()
     require('excel').setup({
-      -- Optional configuration
-      python_cmd = 'python3',  -- Python command to use
-      auto_recalc = true,       -- Auto-recalculate formulas
-      default_sheet = 0,        -- Default sheet index to open
+      -- Configuration options
+      python_cmd = 'python3',
+      max_col_width = 20,
+      min_col_width = 8,
+      show_gridlines = true,
+      auto_recalc = true,
     })
   end,
 }
 ```
 
-### Using [packer.nvim](https://github.com/wbthomason/packer.nvim)
+#### Using [packer.nvim](https://github.com/wbthomason/packer.nvim)
 
 ```lua
 use {
-  'yourusername/excel.nvim',
+  'excel.nvim',
   config = function()
     require('excel').setup()
-  end,
+  end
 }
 ```
 
-### Using [vim-plug](https://github.com/junegunn/vim-plug)
+#### Using [vim-plug](https://github.com/junegunn/vim-plug)
 
 ```vim
-Plug 'yourusername/excel.nvim'
-
-" In your init.vim or init.lua
-lua require('excel').setup()
+Plug '/path/to/excel.nvim'
 ```
+
+#### Manual Installation
+
+```bash
+# Clone or copy the plugin to your Neovim config directory
+mkdir -p ~/.local/share/nvim/site/pack/plugins/start/
+cp -r excel.nvim ~/.local/share/nvim/site/pack/plugins/start/
+```
+
+### 3. Install LibreOffice (Optional, for formula recalculation)
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install libreoffice
+```
+
+**macOS:**
+```bash
+brew install libreoffice
+```
+
+**Windows:**
+Download from [LibreOffice website](https://www.libreoffice.org/download/download/)
 
 ## Usage
 
+### Opening Excel Files
+
+Excel files are automatically opened when you open them in Neovim:
+
+```bash
+nvim myfile.xlsx
+```
+
+Or from within Neovim:
+
+```vim
+:ExcelOpen myfile.xlsx
+```
+
+### Keybindings
+
+#### Navigation
+- `<CR>` / `i` / `a` - Edit cell at cursor
+- `ge` - Go to specific cell (e.g., B5)
+- `h/j/k/l` - Navigate cells (Vim navigation)
+
+#### Sheet Management
+- `gs` - List and switch between sheets
+- `gn` - Create new sheet
+- `gd` - Delete current sheet
+
+#### Row/Column Operations
+- `ir` - Insert row at cursor
+- `ic` - Insert column at cursor
+- `dr` - Delete row at cursor
+- `dc` - Delete column at cursor
+
+#### Formula Operations
+- `gf` - Insert formula in current cell
+- `gr` - Recalculate all formulas (requires LibreOffice)
+
+#### File Operations
+- `<leader>w` or `:w` - Save Excel file
+- `:ExcelSave` - Save Excel file
+
 ### Commands
 
-| Command | Description |
-|---------|-------------|
-| `:ExcelOpen [file]` | Open Excel file as CSV in a split |
-| `:ExcelView [file]` | View Excel file in floating window |
-| `:ExcelSave` | Save changes back to Excel file |
-| `:ExcelCreate [file]` | Create a new Excel workbook |
-| `:ExcelSheets` | List all sheets in the current workbook |
-| `:ExcelSwitchSheet <index>` | Switch to a different sheet (0-indexed) |
-| `:ExcelInfo` | Show information about current Excel file |
-| `:ExcelAddFormula <formula>` | Add formula to current cell (planned) |
-| `:ExcelFormat` | Format current cell/selection (planned) |
-
-### Example Workflow
-
-1. **Open an Excel file:**
-   ```vim
-   :ExcelOpen /path/to/your/file.xlsx
-   ```
-
-2. **Edit the data** using normal Neovim editing commands
-
-3. **List available sheets:**
-   ```vim
-   :ExcelSheets
-   ```
-
-4. **Switch to another sheet:**
-   ```vim
-   :ExcelSwitchSheet 1
-   ```
-
-5. **Save changes:**
-   ```vim
-   :ExcelSave
-   ```
-
-### Quick Preview
-
-View an Excel file in a floating window without opening it:
-
+#### File Operations
 ```vim
-:ExcelView /path/to/file.xlsx
+:ExcelOpen <filepath>        " Open Excel file
+:ExcelSave                    " Save current file
 ```
 
-Press `q` or `<Esc>` to close the preview.
-
-### Creating a New Workbook
-
+#### Sheet Operations
 ```vim
-:ExcelCreate /path/to/new_workbook.xlsx
+:ExcelListSheets             " Show list of sheets
+:ExcelSwitchSheet <name>     " Switch to specific sheet
+:ExcelNewSheet [name]        " Create new sheet
+:ExcelDeleteSheet [name]     " Delete sheet
 ```
 
-This creates a new Excel file with a default sheet containing three columns.
+#### Cell/Row/Column Operations
+```vim
+:ExcelInsertRow [position]   " Insert row at position
+:ExcelInsertColumn [position] " Insert column at position
+:ExcelDeleteRow [position]   " Delete row at position
+:ExcelDeleteColumn [position] " Delete column at position
+```
+
+#### Formula Operations
+```vim
+:ExcelFormula <formula>      " Insert formula (e.g., =SUM(A1:A10))
+:ExcelRecalc                 " Recalculate all formulas
+```
+
+#### Navigation
+```vim
+:ExcelGoTo <cell>            " Go to cell (e.g., B5, AA100)
+```
+
+#### Future Features (Coming Soon)
+```vim
+:ExcelFormat                 " Format cell (bold, colors, etc.)
+:ExcelFreeze [position]      " Freeze panes
+:ExcelSort [options]         " Sort range
+:ExcelFilter                 " Toggle autofilter
+:ExcelChart [options]        " Create chart
+```
+
+## Examples
+
+### Example 1: Edit a Cell
+
+1. Open an Excel file: `nvim budget.xlsx`
+2. Navigate to a cell with arrow keys
+3. Press `i` or `<CR>` to edit
+4. Type the new value
+5. Press `<CR>` to confirm
+6. Save with `<leader>w`
+
+### Example 2: Add a Formula
+
+1. Navigate to the cell where you want the formula
+2. Press `gf`
+3. Enter the formula: `=SUM(A1:A10)`
+4. Press `<CR>` to confirm
+5. Press `gr` to recalculate (requires LibreOffice)
+
+### Example 3: Work with Multiple Sheets
+
+1. Press `gs` to see all sheets
+2. Select a sheet from the list
+3. Press `gn` to create a new sheet
+4. Enter the sheet name
+5. Switch back with `gs`
+
+### Example 4: Manipulate Rows/Columns
+
+1. Navigate to a row/column
+2. Press `ir` to insert a row above
+3. Press `ic` to insert a column to the left
+4. Press `dr` to delete the current row
+5. Press `dc` to delete the current column
 
 ## Configuration
 
-Default configuration:
+Configure the plugin in your `init.lua`:
 
 ```lua
 require('excel').setup({
-  python_cmd = 'python3',     -- Python command
-  temp_dir = vim.fn.stdpath('cache') .. '/excel.nvim',  -- Temp directory
-  auto_recalc = true,          -- Auto-recalculate formulas
-  default_sheet = 0,           -- Default sheet index
-  float_opts = {               -- Floating window options
-    relative = 'editor',
-    width = math.floor(vim.o.columns * 0.9),
-    height = math.floor(vim.o.lines * 0.9),
-    col = math.floor(vim.o.columns * 0.05),
-    row = math.floor(vim.o.lines * 0.05),
-    style = 'minimal',
-    border = 'rounded',
-  },
+  -- Python command (python3, python, etc.)
+  python_cmd = 'python3',
+  
+  -- Column display width
+  max_col_width = 20,
+  min_col_width = 8,
+  
+  -- Display options
+  show_gridlines = true,
+  show_formulas = false,  -- Show formulas instead of values
+  
+  -- Auto-recalculate on save (requires LibreOffice)
+  auto_recalc = false,
+  
+  -- Formatting
+  date_format = '%Y-%m-%d',
+  number_format = '%.2f',
+  cell_padding = 1,
 })
 ```
 
-## Key Bindings (Optional)
-
-Add these to your Neovim config for quick access:
-
-```lua
-vim.keymap.set('n', '<leader>xo', '<cmd>ExcelOpen<cr>', { desc = 'Open Excel file' })
-vim.keymap.set('n', '<leader>xv', '<cmd>ExcelView<cr>', { desc = 'View Excel file' })
-vim.keymap.set('n', '<leader>xs', '<cmd>ExcelSave<cr>', { desc = 'Save Excel file' })
-vim.keymap.set('n', '<leader>xl', '<cmd>ExcelSheets<cr>', { desc = 'List sheets' })
-vim.keymap.set('n', '<leader>xi', '<cmd>ExcelInfo<cr>', { desc = 'Excel info' })
-```
-
-## Recommended Plugins
-
-For better CSV editing experience, consider installing:
-
-- [chrisbra/csv.vim](https://github.com/chrisbra/csv.vim) - CSV file handling and column alignment
-- [mechatroner/rainbow_csv](https://github.com/mechatroner/rainbow_csv) - CSV syntax highlighting
-
 ## How It Works
 
-1. **Excel → CSV**: When you open an Excel file, the plugin uses `pandas` to convert the active sheet to a temporary CSV file
-2. **Edit**: You edit the CSV file using Neovim's standard editing features
-3. **CSV → Excel**: When you save, `openpyxl` updates the original Excel file with your changes
+1. **Python Backend**: Uses `openpyxl` to read/write Excel files
+2. **Lua Frontend**: Provides Neovim interface and keybindings
+3. **Data Format**: Converts Excel to a grid format for editing
+4. **Formula Support**: Preserves formulas and recalculates with LibreOffice
+5. **Multi-format**: Handles different Excel formats through conversion
+
+## Architecture
+
+```
+excel.nvim/
+├── plugin/
+│   └── excel.lua          # Plugin initialization & autocommands
+├── lua/
+│   └── excel.lua          # Core Lua module
+├── python/
+│   └── excel_handler.py   # Python Excel handler
+├── syntax/
+│   └── excel.vim          # Syntax highlighting
+├── ftdetect/
+│   └── excel.vim          # Filetype detection
+└── README.md              # This file
+```
+
+## Troubleshooting
+
+### "openpyxl not installed"
+```bash
+pip install openpyxl
+```
+
+### "Formula recalculation failed"
+Install LibreOffice:
+```bash
+# Ubuntu/Debian
+sudo apt-get install libreoffice
+
+# macOS
+brew install libreoffice
+```
+
+### "Python command not found"
+Configure the Python command in setup:
+```lua
+require('excel').setup({
+  python_cmd = '/usr/bin/python3',  -- or your Python path
+})
+```
+
+### Formulas show as text
+Press `gr` to recalculate formulas (requires LibreOffice)
+
+### Can't edit cells
+Make sure you're not on the header row or separator line. Navigate to a data cell and press `i`.
+
+## Performance
+
+- **Small files** (< 1000 rows): Instant loading
+- **Medium files** (< 10000 rows): A few seconds
+- **Large files** (> 10000 rows): May take 10-30 seconds
+
+For very large files, consider:
+- Using CSV format when possible
+- Filtering/limiting the data before opening
+- Using external tools for initial processing
 
 ## Limitations
 
-- Formulas are preserved when saving, but you edit the calculated values in CSV format
-- Complex Excel formatting may not be fully preserved
-- Charts and images are not supported
-- Macros are not executed
+- Formula recalculation requires LibreOffice
+- Charts and images are not displayed (preserved on save)
+- Advanced formatting (colors, fonts) shown simply
+- Macros in .xlsm files are preserved but not executed
+- Very large files (>50MB) may be slow
 
-## Future Enhancements
+## Roadmap
 
-- [ ] Direct formula editing
-- [ ] Cell formatting (bold, colors, etc.)
-- [ ] Better formula support
-- [ ] Column width adjustment
-- [ ] Row/column insertion/deletion
-- [ ] Cell merging
+- [ ] Cell formatting (bold, colors, borders)
+- [ ] Freeze panes visualization
+- [ ] Sort and filter UI
+- [ ] Chart creation and editing
+- [ ] Better performance for large files
+- [ ] Conditional formatting support
 - [ ] Data validation
-- [ ] Better error handling
-- [ ] Undo/redo support for Excel operations
+- [ ] Pivot table support
+- [ ] VBA macro editing
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit issues or pull requests.
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License - See LICENSE file for details
 
 ## Credits
 
-Built with:
-- [pandas](https://pandas.pydata.org/) - Data manipulation
-- [openpyxl](https://openpyxl.readthedocs.io/) - Excel file handling
-- [Neovim](https://neovim.io/) - The best text editor
+- Built with [openpyxl](https://openpyxl.readthedocs.io/)
+- Inspired by various Vim/Neovim table plugins
+- Created for the Neovim community
 
 ## Support
 
 If you encounter any issues or have feature requests, please open an issue on GitHub.
+
+---
+
+**Made with ❤️ for Neovim users who work with Excel files**
