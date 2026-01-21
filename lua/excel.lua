@@ -195,9 +195,21 @@ local function update_buffer()
   
   -- Set cursor position
   if M.state.cursor.row and M.state.cursor.col then
-    local line = M.state.cursor.row + 2  -- +2 for header and separator
-    local col = 5 + (M.state.cursor.col - 1) * (M.config.max_col_width + 3)
-    vim.api.nvim_win_set_cursor(0, {line, col})
+    local line = M.state.cursor.row + 2  -- +2 for header and separator (display line)
+    -- Calculate horizontal position: 4 (row number area) + (col-1) * (width + 3) + 1 (into cell)
+    local col = 4 + (M.state.cursor.col - 1) * (M.config.max_col_width + 3) + 1
+    
+    -- Ensure we're within bounds
+    if line <= #lines then
+      vim.api.nvim_win_set_cursor(0, {line, col})
+    end
+  end
+  
+  -- Update status line with current cell info
+  local row, col = get_cursor_cell()
+  if row and col then
+    local cell_ref = col_to_letter(col) .. row
+    vim.b.excel_cell = cell_ref
   end
 end
 
@@ -211,8 +223,16 @@ local function get_cursor_cell()
     return nil, nil
   end
   
+  -- Line 3 in display = Row 1 in data
   local row = line - 2
-  local cell_col = math.floor((col - 5) / (M.config.max_col_width + 3)) + 1
+  
+  -- Calculate column from horizontal position
+  -- Format: "   |" (4 chars) + " value " (width+2) + "|"
+  if col < 4 then
+    return nil, nil  -- On row number
+  end
+  
+  local cell_col = math.floor((col - 4) / (M.config.max_col_width + 3)) + 1
   
   return row, cell_col
 end
@@ -294,6 +314,7 @@ function M.edit_cell()
     return
   end
   
+  local cell_ref = col_to_letter(col) .. row
   local cell_key = row .. ',' .. col
   local current_value = ''
   
@@ -301,8 +322,11 @@ function M.edit_cell()
     current_value = M.state.data[M.state.current_sheet][cell_key] or ''
   end
   
+  -- Convert to string if it's not already
+  current_value = tostring(current_value)
+  
   vim.ui.input({
-    prompt = string.format('Edit cell %s%d: ', col_to_letter(col), row),
+    prompt = string.format('Cell %s [%s]: ', cell_ref, M.state.current_sheet),
     default = current_value,
   }, function(input)
     if input ~= nil then
@@ -310,9 +334,16 @@ function M.edit_cell()
         M.state.data[M.state.current_sheet] = {}
       end
       
+      -- Store the value (empty string if user cleared it)
       M.state.data[M.state.current_sheet][cell_key] = input
       M.state.modified = true
       update_buffer()
+      
+      -- Move cursor down after editing (Excel-like behavior)
+      if M.state.cursor.row then
+        M.state.cursor.row = M.state.cursor.row + 1
+        update_buffer()
+      end
     end
   end)
 end
@@ -671,6 +702,38 @@ function M.setup_keymaps()
   vim.keymap.set('n', 'i', M.edit_cell, opts)
   vim.keymap.set('n', 'a', M.edit_cell, opts)
   vim.keymap.set('n', 'ge', M.goto_cell, opts)
+  
+  -- Update cursor state on movement
+  local function update_cursor_state()
+    local row, col = get_cursor_cell()
+    if row and col then
+      M.state.cursor = { row = row, col = col }
+      -- Update status line
+      local cell_ref = col_to_letter(col) .. row
+      vim.b.excel_cell = cell_ref
+    end
+  end
+  
+  -- Track cursor movement
+  vim.keymap.set('n', 'h', function()
+    vim.cmd('normal! h')
+    update_cursor_state()
+  end, opts)
+  
+  vim.keymap.set('n', 'j', function()
+    vim.cmd('normal! j')
+    update_cursor_state()
+  end, opts)
+  
+  vim.keymap.set('n', 'k', function()
+    vim.cmd('normal! k')
+    update_cursor_state()
+  end, opts)
+  
+  vim.keymap.set('n', 'l', function()
+    vim.cmd('normal! l')
+    update_cursor_state()
+  end, opts)
   
   -- Sheets
   vim.keymap.set('n', 'gs', M.list_sheets, opts)
